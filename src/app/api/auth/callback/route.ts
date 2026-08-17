@@ -6,6 +6,8 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get("code");
   const error = searchParams.get("error");
+  // Strava reports what the user actually granted (they can uncheck boxes)
+  const scope = searchParams.get("scope") ?? "";
 
   if (error) {
     return NextResponse.redirect(new URL(`/?error=${error}`, request.url));
@@ -37,7 +39,7 @@ export async function GET(request: NextRequest) {
 
     const tokenData = await response.json();
     const redirectUrl = new URL("/", request.url);
-    redirectUrl.hash = `access_token=${tokenData.access_token}&refresh_token=${tokenData.refresh_token}&expires_at=${tokenData.expires_at}`;
+    redirectUrl.hash = `access_token=${tokenData.access_token}&refresh_token=${tokenData.refresh_token}&expires_at=${tokenData.expires_at}&scope=${encodeURIComponent(scope)}`;
     return NextResponse.redirect(redirectUrl);
   } catch (err) {
     console.error("OAuth callback error:", err);

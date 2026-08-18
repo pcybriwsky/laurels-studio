@@ -62,7 +62,10 @@ export function RunRail({
   const toRef = useRef<HTMLInputElement>(null);
   const multi = style === "grid";
   const isBlock = style === "block";
-  const heroId = working?.source === "strava" ? working.stravaId : null;
+  const isLog = style === "log";
+  // block and log share the date-range picker; only block has a hero
+  const range = isBlock || isLog;
+  const heroId = isBlock && working?.source === "strava" ? working.stravaId : null;
 
   // Chrome session restore repopulates the date inputs a beat AFTER the page
   // loads, silently (no input/change events) — so the DOM can show dates that
@@ -72,7 +75,7 @@ export function RunRail({
   const blockRef = useRef(block);
   blockRef.current = block;
   useEffect(() => {
-    if (!isBlock) return;
+    if (!range) return;
     let ticks = 0;
     const id = setInterval(() => {
       const b = blockRef.current;
@@ -83,7 +86,7 @@ export function RunRail({
       if (++ticks >= 10) clearInterval(id);
     }, 300);
     return () => clearInterval(id);
-  }, [isBlock]);
+  }, [range]);
 
   // one-click ranges: N weeks back from the newest run, or every run — no
   // date typing, no session-restore pitfalls
@@ -108,9 +111,11 @@ export function RunRail({
 
   return (
     <div className="flex flex-col gap-3">
-      {isBlock && block && (
+      {range && block && (
         <div className="border border-gray-200 rounded-xl p-3 space-y-2">
-          <div className="text-[10px] uppercase tracking-widest text-gray-400">training block</div>
+          <div className="text-[10px] uppercase tracking-widest text-gray-400">
+            {isLog ? "log range" : "training block"}
+          </div>
           <div className="grid grid-cols-2 gap-2">
             <label className="block text-xs">
               <span className="text-gray-400 mb-0.5 block">from</span>
@@ -163,7 +168,7 @@ export function RunRail({
               </button>
             )}
           </div>
-          {picked.length > 0 && (
+          {isBlock && picked.length > 0 && (
             <div className="pt-1 border-t border-gray-100 space-y-1">
               <div className="text-[10px] uppercase tracking-widest text-gray-400">
                 hero statement
@@ -204,6 +209,8 @@ export function RunRail({
               {picked.length} runs
               {heroId != null ? " · hero set" : " · pick hero"}
             </span>
+          ) : isLog ? (
+            <span className="font-mono text-gray-500">{picked.length} rows</span>
           ) : (
             <span className="text-gray-500">pick a run</span>
           )}
@@ -241,16 +248,16 @@ export function RunRail({
           )}
           {runs.map((r) => {
             const isHero = heroId === r.id;
-            const inBlock = isBlock && picked.includes(r.id);
+            const inBlock = range && picked.includes(r.id);
             const mark = isBlock ? block?.marks.get(r.id) : undefined;
             const active = multi
               ? picked.includes(r.id)
-              : isBlock
+              : range
                 ? isHero || inBlock
                 : working?.source === "strava" && working.stravaId === r.id;
             const idx = multi ? picked.indexOf(r.id) : -1;
 
-            if (isBlock) {
+            if (range) {
               return (
                 <div
                   key={r.id}
@@ -260,7 +267,13 @@ export function RunRail({
                 >
                   <label
                     className="flex items-center px-2 cursor-pointer"
-                    title={isHero ? "hero is on its own leg" : "include in training panels"}
+                    title={
+                      isHero
+                        ? "hero is on its own leg"
+                        : isLog
+                          ? "include as a log row"
+                          : "include in training panels"
+                    }
                   >
                     <input
                       type="checkbox"
@@ -315,7 +328,7 @@ export function RunRail({
         </div>
       </div>
 
-      {!multi && working && (
+      {!multi && !isLog && working && (
         <div className="border border-gray-200 rounded-xl p-3 space-y-2">
           <div className="text-[10px] uppercase tracking-widest text-gray-400">
             {isBlock ? "hero data" : "data"}

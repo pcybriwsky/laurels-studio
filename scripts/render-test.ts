@@ -139,6 +139,9 @@ const baseInput: Omit<StyleInput, "blockPanel"> = {
   blockRuns: routes,
   blockCaptions: ["238 MI", "471 MI", "712 MI"],
   blockHeroLines: ["712 MILES", "ONE GOAL"],
+  logRows: [],
+  logPage: 0,
+  logOpts: { capMm: 5.5, stitchLenMm: 1.8, passes: 3, engine: "bean" },
 };
 
 for (const panel of [0, 1, 2] as const) {

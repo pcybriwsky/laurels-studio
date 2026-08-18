@@ -17,6 +17,8 @@ import {
 } from "@/lib/glyph/styles";
 import { StitchPlanOpts } from "@/lib/glyph/stitchplan";
 import { fitHoopGrid, hoopLayout, hoopField } from "@/lib/glyph/hoopplan";
+import { buildLetteringTestPlan, logPageCount, LogRow } from "@/lib/glyph/logplan";
+import { downloadPes } from "@/lib/glyph/pes";
 import { saveLoc, loadLocs, saveStitchOpts, loadStitchOpts } from "@/lib/db";
 import { reverseGeocodeLabel } from "@/lib/geocode";
 import { RunRail, cleanText } from "@/components/RunRail";
@@ -28,6 +30,7 @@ const STYLES: { id: StyleId; label: string }[] = [
   { id: "grid", label: "Grid" },
   { id: "receipt", label: "Receipt" },
   { id: "block", label: "Block" },
+  { id: "log", label: "Log" },
 ];
 const OUTPUTS: { id: OutputId; label: string }[] = [
   { id: "embroidery", label: "Embroidery" },
@@ -65,6 +68,12 @@ export function Studio({ runs }: { runs: StravaActivity[] }) {
   // hero badge lines — empty string = auto ("<total> MILES" / "ONE GOAL")
   const [blockL1, setBlockL1] = useState("");
   const [blockL2, setBlockL2] = useState("");
+  // log style: lettering params (the brief's three dials) + page
+  const [logPage, setLogPage] = useState(0);
+  const [logCap, setLogCap] = useState<4.7 | 5.5 | 6.9>(5.5);
+  const [logStitchLen, setLogStitchLen] = useState(1.8);
+  const [logPasses, setLogPasses] = useState<1 | 3 | 5>(3);
+  const [logEngine, setLogEngine] = useState<"bean" | "juju">("bean");
   const [locs, setLocs] = useState<Map<number, string>>(new Map());
   const [lookupBusy, setLookupBusy] = useState(false);
 
@@ -192,9 +201,12 @@ export function Studio({ runs }: { runs: StravaActivity[] }) {
     );
 
   const heroId = working?.source === "strava" ? working.stravaId : null;
+  // hero exclusion only applies to the block style — the log includes every
+  // run in range (the same date-range state serves both styles)
+  const heroExclude = style === "block" ? heroId : null;
 
   const toggleBlock = (id: number) => {
-    if (id === heroId) return;
+    if (style === "block" && id === heroId) return;
     setBlockPicked((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
@@ -209,15 +221,15 @@ export function Studio({ runs }: { runs: StravaActivity[] }) {
       gpsRuns
         .filter((r) => {
           const d = runDay(r);
-          return d >= lo && d <= hi && r.id !== heroId;
+          return d >= lo && d <= hi && r.id !== heroExclude;
         })
         .sort((a, b) => runDay(a).localeCompare(runDay(b)))
         .map((r) => r.id)
     );
-    // heroId deliberately omitted: picking a new hero already strips it from
-    // blockPicked without resetting the user's checkbox tweaks
+    // heroExclude deliberately omitted: picking a new hero already strips it
+    // from blockPicked without resetting the user's checkbox tweaks
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [blockFrom, blockTo, gpsRuns]);
+  }, [blockFrom, blockTo, gpsRuns, style]);
 
   const gridRuns = useMemo(() => {
     const byId = new Map(gpsRuns.map((r) => [r.id, r]));
@@ -235,11 +247,23 @@ export function Studio({ runs }: { runs: StravaActivity[] }) {
   const blockOrdered = useMemo(() => {
     const byId = new Map(gpsRuns.map((r) => [r.id, r]));
     return blockPicked
-      .filter((id) => id !== heroId)
+      .filter((id) => id !== heroExclude)
       .map((id) => byId.get(id))
       .filter((r): r is StravaActivity => !!r?.map?.summary_polyline)
       .sort((a, b) => runDay(a).localeCompare(runDay(b)));
-  }, [blockPicked, gpsRuns, heroId]);
+  }, [blockPicked, gpsRuns, heroExclude]);
+
+  // log rows: same range selection, oldest first — date MM.DD, one-decimal miles
+  const logRows = useMemo<LogRow[]>(
+    () =>
+      blockOrdered.map((r) => ({
+        route: decodePolyline(r.map!.summary_polyline!),
+        dateStr: runDay(r).slice(5).replace("-", "."),
+        distStr: metersToMiles(r.distance).toFixed(1),
+      })),
+    [blockOrdered]
+  );
+  const logPages = logPageCount(logRows.length, logCap);
 
   const blockRuns = useMemo(
     () =>
@@ -373,6 +397,9 @@ export function Studio({ runs }: { runs: StravaActivity[] }) {
       blockPanel,
       blockCaptions,
       blockHeroLines,
+      logRows,
+      logPage: Math.min(logPage, logPages - 1),
+      logOpts: { capMm: logCap, stitchLenMm: logStitchLen, passes: logPasses, engine: logEngine },
     }),
     [
       style,
@@ -392,6 +419,13 @@ export function Studio({ runs }: { runs: StravaActivity[] }) {
       blockPanel,
       blockCaptions,
       blockHeroLines,
+      logRows,
+      logPage,
+      logPages,
+      logCap,
+      logStitchLen,
+      logPasses,
+      logEngine,
     ]
   );
 
@@ -411,11 +445,11 @@ export function Studio({ runs }: { runs: StravaActivity[] }) {
         runs={gpsRuns}
         style={style}
         working={working}
-        picked={style === "block" ? blockPicked : picked}
+        picked={style === "block" || style === "log" ? blockPicked : picked}
         capacity={capacity}
         gpxName={gpxName}
         onPickRun={pickRun}
-        onToggleGrid={style === "block" ? toggleBlock : toggleGrid}
+        onToggleGrid={style === "block" || style === "log" ? toggleBlock : toggleGrid}
         onFillLatest={() => setPicked(gpsRuns.slice(0, capacity).map((r) => r.id))}
         onClearGrid={() => setPicked([])}
         onGpx={onGpx}
@@ -423,7 +457,7 @@ export function Studio({ runs }: { runs: StravaActivity[] }) {
         onLookup={onLookup}
         lookupBusy={lookupBusy}
         block={
-          style === "block"
+          style === "block" || style === "log"
             ? {
                 from: blockFrom,
                 to: blockTo,
@@ -591,6 +625,89 @@ export function Studio({ runs }: { runs: StravaActivity[] }) {
                   {blockFit.grid}×{blockFit.grid} · {blockFit.n} runs · {blockFit.box.toFixed(0)}mm
                 </span>
               )}
+            </>
+          )}
+          {style === "log" && (
+            <>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] uppercase tracking-widest text-gray-400">text</span>
+                <Seg
+                  options={[
+                    { id: "bean" as const, label: "bean" },
+                    { id: "juju" as const, label: "juju" },
+                  ]}
+                  value={logEngine}
+                  onChange={setLogEngine}
+                  small
+                />
+              </div>
+              {logEngine === "bean" && (
+                <>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] uppercase tracking-widest text-gray-400">cap</span>
+                    <Seg
+                      options={[
+                        { id: 4.7 as const, label: "4.7" },
+                        { id: 5.5 as const, label: "5.5" },
+                        { id: 6.9 as const, label: "6.9" },
+                      ]}
+                      value={logCap}
+                      onChange={setLogCap}
+                      small
+                    />
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] uppercase tracking-widest text-gray-400">passes</span>
+                    <Seg
+                      options={[
+                        { id: 1 as const, label: "1" },
+                        { id: 3 as const, label: "3" },
+                        { id: 5 as const, label: "5" },
+                      ]}
+                      value={logPasses}
+                      onChange={setLogPasses}
+                      small
+                    />
+                  </div>
+                  <label className="block">
+                    <span className="block text-[10px] uppercase tracking-widest text-gray-400 mb-0.5">
+                      stitch {logStitchLen.toFixed(1)}mm
+                    </span>
+                    <input
+                      type="range"
+                      min={1.2}
+                      max={2.2}
+                      step={0.1}
+                      value={logStitchLen}
+                      onChange={(e) => setLogStitchLen(Number(e.target.value))}
+                      className="accent-orange-600"
+                    />
+                  </label>
+                </>
+              )}
+              {logPages > 1 && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] uppercase tracking-widest text-gray-400">page</span>
+                  <Seg
+                    options={Array.from({ length: logPages }, (_, i) => ({
+                      id: i,
+                      label: String(i + 1),
+                    }))}
+                    value={Math.min(logPage, logPages - 1)}
+                    onChange={setLogPage}
+                    small
+                  />
+                </div>
+              )}
+              <button
+                onClick={() =>
+                  downloadPes(buildLetteringTestPlan(logStitchLen), "lettering-test.pes", "#ff6a00")
+                }
+                className="px-2 py-1 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600"
+                title="the acceptance scrap: caps 4.7/5.5/6.9 × passes 3/5, '08.15 10.0' per cell — one hooping, cream 40wt"
+              >
+                ↓ lettering test grid
+              </button>
             </>
           )}
         </div>

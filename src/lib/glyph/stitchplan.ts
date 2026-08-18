@@ -460,7 +460,8 @@ function cullSpikes(pts: XY[], minStep = 0.12): XY[] {
 }
 
 // forward-back-forward per segment: classic bean stitch
-function beanify(pts: XY[], repeat: number): XY[] {
+// (exported: the Log style's Hershey lettering beans every glyph segment)
+export function beanify(pts: XY[], repeat: number): XY[] {
   if (repeat <= 1 || pts.length < 2) return pts;
   const out: XY[] = [pts[0]];
   for (let i = 1; i < pts.length; i++) {

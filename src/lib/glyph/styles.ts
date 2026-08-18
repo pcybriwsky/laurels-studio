@@ -34,9 +34,10 @@ import {
   ORANGE,
 } from "./custom";
 import { flattenRoute } from "./flatten";
+import { buildLogPlan, logPageCount, LogRow, LogOpts } from "./logplan";
 import type { GlyphLayer } from "./serialize";
 
-export type StyleId = "glyph" | "route" | "grid" | "receipt" | "block";
+export type StyleId = "glyph" | "route" | "grid" | "receipt" | "block" | "log";
 export type OutputId = "embroidery" | "print";
 export type UnderlayId = "none" | "grid" | "streets" | "topo";
 // Block style: which artifact is on screen — one of three chronological
@@ -75,6 +76,10 @@ export interface StyleInput {
   blockHeroLines: [string, string] | null;
   // internal: single-panel caption forwarded from blockStyle to gridStyle
   caption?: string | null;
+  // log style: date-range rows (oldest first) + page + lettering params
+  logRows: LogRow[];
+  logPage: number;
+  logOpts: LogOpts;
 }
 
 export interface StyleResult {
@@ -97,7 +102,31 @@ export function buildStyle(input: StyleInput): StyleResult {
       return receiptStyle(input);
     case "block":
       return blockStyle(input);
+    case "log":
+      return logStyle(input);
   }
+}
+
+// Log style: captain's-log rows (glyph · date · distance · rule), Hershey
+// bean lettering or JuJu satin fallback. Paginates by cap height.
+function logStyle(input: StyleInput): StyleResult {
+  if (input.logRows.length === 0) return empty("pick a date range — rows fill in oldest-first");
+  const pages = logPageCount(input.logRows.length, input.logOpts.capMm);
+  const page = Math.min(input.logPage, pages - 1);
+  const { plan, layers } = buildLogPlan(input.logRows, page, input.logOpts);
+  return {
+    layers,
+    // everything in a log row is stitched — no design-only backdrop needed
+    underlay: [],
+    plan: input.output === "embroidery" ? plan : null,
+    planNote:
+      input.output === "print"
+        ? "print typography for the log (Space Mono / Archivo) comes in the print pass — this preview shows the stitch composition"
+        : input.logOpts.engine === "juju"
+          ? "JuJu is fixed 6.9mm caps — the cap slider only affects bean lettering"
+          : null,
+    serial: `log-p${page + 1}-${input.logOpts.engine}`,
+  };
 }
 
 // Split a training block into three chronological panels — the marathon

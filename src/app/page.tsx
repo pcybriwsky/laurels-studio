@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { Wordmark } from "@/components/Wordmark";
 import { STRAVA_API_BASE, StravaActivity, isRun } from "@/lib/strava";
 import { saveRuns, loadRuns, clearRuns, getLastSync } from "@/lib/db";
 import { Studio } from "@/components/Studio";
@@ -183,7 +184,9 @@ export default function Home() {
   if (!token) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center p-8 gap-6">
-        <h1 className="font-mono text-sm tracking-[0.3em] uppercase">⌐ Laurels Studio ⌙</h1>
+        <h1 className="font-mono text-sm tracking-[0.3em] uppercase">
+          <Wordmark label="Laurels Studio" />
+        </h1>
         <p className="text-gray-500 text-sm">Connect Strava to pull your run data.</p>
         <button
           onClick={connectStrava}
@@ -200,7 +203,9 @@ export default function Home() {
     <main className="min-h-screen p-6 md:p-8 max-w-6xl mx-auto">
       <header className="flex items-center justify-between mb-6">
         <div className="flex items-baseline gap-3">
-          <h1 className="font-mono text-xs tracking-[0.3em] uppercase">⌐ Laurels Studio ⌙</h1>
+          <h1 className="font-mono text-xs tracking-[0.3em] uppercase">
+            <Wordmark label="Laurels Studio" />
+          </h1>
           {lastSync && (
             <span className="text-xs text-gray-400 font-mono">
               {runs.length} runs · {new Date(lastSync).toLocaleDateString()}

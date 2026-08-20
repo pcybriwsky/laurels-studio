@@ -14,7 +14,9 @@ import { StitchPreview } from "@/components/StitchPreview";
 import { GlyphNodes } from "@/components/GlyphSvg";
 import { PanelBuilder } from "@/components/PanelBuilder";
 
-const NAVY = "#141a2e";
+// Fabric simulation. Black shorts to start (Lululemon-black), not pure #000
+// which loses the sense of material. Cream thread reads 12.9:1 here.
+const FABRIC = "#111111";
 const PES_THREAD_COLOR = "#ff6a00";
 
 export function PreviewPane({
@@ -52,7 +54,7 @@ export function PreviewPane({
           {output === "embroidery" && plan ? (
             <StitchPreview plan={plan} showPoints={showPoints} backdrop={result.underlay} />
           ) : (
-            <div className="rounded-xl p-5" style={{ background: NAVY }}>
+            <div className="rounded-xl p-5" style={{ background: FABRIC }}>
               <svg viewBox="0 0 100 100" className="w-full h-auto">
                 {layers.map((l, i) => (
                   <g key={i} style={{ color: l.color }}>

@@ -119,7 +119,7 @@ export function StitchPreview({
       <svg
         viewBox={`-2 -2 ${patch + 4} ${patch + 4}`}
         className="w-full h-auto rounded"
-        style={{ background: "#111827", maxWidth: 520 }}
+        style={{ background: "#111111", maxWidth: 520 }}
       >
         {/* 10mm grid */}
         {grid.map((v) => (

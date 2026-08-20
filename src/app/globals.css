@@ -32,8 +32,8 @@
   --color-orange-50: #f6e6da;
   --color-orange-100: #efd5c2;
   --color-orange-400: #d4753f;
-  --color-orange-600: #c1541f;
-  --color-orange-700: #a5461a;
+  --color-orange-600: #a5461a;
+  --color-orange-700: #8f3c15;
 
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
   --font-serif: var(--font-cormorant), ui-serif, Georgia, serif;
@@ -42,7 +42,9 @@
 :root {
   --cream: #f3ecdd;
   --ink: #0c3226;
-  --earned: #c1541f;
+  --earned: #a5461a;
+  --earned-dark: #d9682a;
+  --fabric: #111111;
 }
 
 html {

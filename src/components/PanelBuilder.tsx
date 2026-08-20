@@ -8,7 +8,10 @@ import { downloadPanelPdf } from "@/lib/glyph/export";
 import { PanelItem } from "@/lib/glyph/pdf";
 import { GlyphNodes } from "@/components/GlyphSvg";
 
-const PRINT_COLOR = "#ff6a00";
+// DTF default matches the embroidery thread so printed and stitched pieces
+// read as one family. Orange is NOT the default: it means "earned", and
+// spending it on every print would empty the meaning.
+const PRINT_COLOR = "#e8d4a0";
 
 // DTF leg-panel builder for the print-shop handoff (Eric / Established
 // Screens). Two panel types on a physical-size page, exported as true vector
@@ -195,7 +198,7 @@ export function PanelBuilder({ runs }: { runs: StravaActivity[] }) {
               viewBox={`0 0 ${panelW * 10} ${panelH * 10}`}
               className="rounded"
               style={{
-                background: "#111827",
+                background: "#111111",
                 color: PRINT_COLOR,
                 width: "100%",
                 maxWidth: 380,

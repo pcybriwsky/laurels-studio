@@ -1,12 +1,57 @@
 @import "tailwindcss";
 
+/**
+ * Laurels palette, shared with laurels-site.
+ *
+ * The studio is the EXACT half of "warm and exact" — Pete's workshop, not a
+ * brand surface. So it takes the palette and the monospace data voice, but not
+ * the ceremonial serif, which belongs to the customer-facing side.
+ *
+ * Remapping Tailwind's scale centrally means every existing gray and orange
+ * utility across the components picks this up with no per-file edits, and the
+ * whole thing is reversible by deleting this block.
+ *
+ * NOT touched anywhere: the artwork hexes (#e8d4a0 thread, #141a2e navy,
+ * #ff6a00 print). Those simulate physical materials — repainting them would
+ * make previews lie about what comes off the machine.
+ */
+@theme {
+  /* Warm neutral ramp: cream -> deep pine. Replaces Tailwind's cool grays. */
+  --color-gray-50: #ece4d2;
+  --color-gray-100: #e4dac5;
+  --color-gray-200: #d3c6ac;
+  --color-gray-300: #b8a98d;
+  --color-gray-400: #6f6a5b;
+  --color-gray-500: #5a5749;
+  --color-gray-600: #46503f;
+  --color-gray-700: #2f4535;
+  --color-gray-800: #1a3a2c;
+  --color-gray-900: #0c3226;
+
+  /* Orange stays reserved for the earned thing — selection, primary action. */
+  --color-orange-50: #f6e6da;
+  --color-orange-100: #efd5c2;
+  --color-orange-400: #d4753f;
+  --color-orange-600: #c1541f;
+  --color-orange-700: #a5461a;
+
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  --font-serif: var(--font-cormorant), ui-serif, Georgia, serif;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --cream: #f3ecdd;
+  --ink: #0c3226;
+  --earned: #c1541f;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--cream);
+  color: var(--ink);
   font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
 }

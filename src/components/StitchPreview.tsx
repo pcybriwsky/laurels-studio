@@ -3,6 +3,11 @@ import { StitchPlan } from "@/lib/glyph/stitchplan";
 import type { GlyphLayer } from "@/lib/glyph/serialize";
 import { GlyphNodes } from "@/components/GlyphSvg";
 
+// PLACEHOLDER — not a measured thread colour. Present since the first commit
+// with no provenance: someone picked a cream on screen. Real thread is specified
+// by SKU (Madeira Polyneon / Isacord / Robison-Anton), chosen off a physical
+// colour card against the actual fabric, then sampled from a daylight photo of a
+// stitch-out. Also premature: embroidery vs print is not decided yet.
 const THREAD = "#e8d4a0";
 const JUMP_COLOR = "#f87171";
 const STITCH_OUT_MS = 8000;

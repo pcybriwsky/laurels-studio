@@ -5,6 +5,7 @@ import { GlyphNode, GLYPH_FONT } from "@/lib/glyph/types";
 export function GlyphSvg({
   nodes,
   size,
+  // PLACEHOLDER cream — see StitchPreview.tsx, no thread SKU chosen yet.
   color = "#e8d4a0",
   className,
 }: {

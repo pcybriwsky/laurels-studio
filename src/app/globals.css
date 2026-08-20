@@ -17,10 +17,10 @@
  */
 @theme {
   /* Warm neutral ramp: cream -> deep pine. Replaces Tailwind's cool grays. */
-  --color-gray-50: #ece4d2;
-  --color-gray-100: #e4dac5;
-  --color-gray-200: #d3c6ac;
-  --color-gray-300: #b8a98d;
+  --color-gray-50: #f0e9d8;
+  --color-gray-100: #e8dfcb;
+  --color-gray-200: #d7cbb2;
+  --color-gray-300: #bcae93;
   --color-gray-400: #6f6a5b;
   --color-gray-500: #5a5749;
   --color-gray-600: #46503f;
@@ -40,7 +40,7 @@
 }
 
 :root {
-  --cream: #f3ecdd;
+  --cream: #f7f1e3;
   --ink: #0c3226;
   --earned: #a5461a;
   --earned-dark: #d9682a;

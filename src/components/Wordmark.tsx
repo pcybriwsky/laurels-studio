@@ -1,61 +1,55 @@
 /**
- * The bracket lockup, drawn rather than typed.
+ * Studio lockup — record voice throughout.
  *
- * Previously Unicode glyphs (U+2310 / U+2319) whose size and baseline were
- * decided by whatever font resolved them — they could never match.
- *
- * Two straight strokes per corner, never a bent path: the same law the
- * stitched badge follows, since bent satin ribbons sew unevenly.
- *
- * Alignment: the box is exactly cap-height tall and sits on the baseline
- * (vertical-align: baseline puts an inline SVG's bottom edge there). So the
- * opening bracket's arm lands on the cap line and the closing bracket's arm
- * lands on the baseline — the two corners frame the word's actual bounds
- * instead of floating around its line box.
+ * The studio is the workshop, not a brand surface, so it keeps the mono
+ * wordmark WITH corners: record mark plus record voice. The public site uses
+ * the ceremonial lockup instead (serif caps, no corners, laurel above). The
+ * two surfaces differ on purpose.
  */
-const CAP = "0.7em"; // IBM Plex Mono cap height ≈ 0.698em
 
-export function Bracket({ corner }: { corner: "tl" | "br" }) {
-  const tl = corner === "tl";
-  // Inset keeps the stroke fully inside the box so the corner sits exactly on
-  // the cap line / baseline rather than half a stroke past it.
-  const x = tl ? 0.6 : 9.4;
-  const y = tl ? 0.6 : 9.4;
+/**
+ * Two rectangles joined at the corner — never a bent path, because bent satin
+ * ribbons sew unevenly. Settled proportion: 13% thickness, 58% arms, which
+ * reads as a viewfinder rather than a frame and stitches to 3.3mm on a 25mm
+ * tag. Sized in em so it scales with whatever text it sits beside.
+ */
+const THICK = 0.13;
+const ARM = 0.58;
+const BOX = 100; // viewBox units; em sizing happens on the element
+
+export function Corner({ corner }: { corner: "tl" | "tr" | "bl" | "br" }) {
+  const w = BOX * THICK;
+  const arm = BOX * ARM;
+  const top = corner === "tl" || corner === "tr";
+  const left = corner === "tl" || corner === "bl";
+  const rects: [number, number, number, number][] = [
+    [left ? 0 : BOX - arm, top ? 0 : BOX - w, arm, w],
+    [left ? 0 : BOX - w, top ? 0 : BOX - arm, w, arm],
+  ];
+  // Crop the viewBox to the ink itself. The L only occupies `arm` of the box,
+  // so a full-box viewBox would anchor empty space and float the corner off
+  // the text. Cropped, vertical-align:baseline lands the ink on the baseline
+  // and the far arm on the cap line — the corners frame the word's real bounds.
+  const vx = left ? 0 : BOX - arm;
+  const vy = top ? 0 : BOX - arm;
   return (
     <svg
-      viewBox="0 0 10 10"
+      viewBox={`${vx} ${vy} ${arm} ${arm}`}
       aria-hidden
-      style={{
-        width: CAP,
-        height: CAP,
-        verticalAlign: "baseline",
-        overflow: "visible",
-      }}
+      className="shrink-0"
+      style={{ width: "0.7em", height: "0.7em", verticalAlign: "baseline" }}
     >
-      <line
-        x1={x}
-        y1={y}
-        x2={tl ? 7.4 : 2.6}
-        y2={y}
-        stroke="currentColor"
-        strokeWidth="1.2"
-      />
-      <line
-        x1={x}
-        y1={y}
-        x2={x}
-        y2={tl ? 6.2 : 3.8}
-        stroke="currentColor"
-        strokeWidth="1.2"
-      />
+      {rects.map(([x, y, rw, rh], i) => (
+        <rect key={i} x={x} y={y} width={rw} height={rh} fill="currentColor" />
+      ))}
     </svg>
   );
 }
 
 export function Wordmark({
   label = "Laurels",
-  tracking = "0.42em",
-  gap = "0.5em",
+  tracking = "0.3em",
+  gap = "0.55em",
   className = "",
 }: {
   label?: string;
@@ -64,13 +58,21 @@ export function Wordmark({
   className?: string;
 }) {
   return (
-    <span className={className} style={{ letterSpacing: 0, whiteSpace: "nowrap" }}>
-      <Bracket corner="tl" />
+    <span
+      className={className}
+      style={{
+        display: "inline-flex",
+        alignItems: "baseline",
+        letterSpacing: 0,
+        whiteSpace: "nowrap",
+      }}
+    >
+      <Corner corner="tl" />
       <span
         style={{
           letterSpacing: tracking,
-          // Letter-spacing also applies after the final character, which pushes
-          // the closing bracket further out than the opening one. Cancel it.
+          // letter-spacing trails the final character too; cancel it so the
+          // closing corner isn't pushed further out than the opening one.
           marginRight: `calc(-1 * ${tracking})`,
           paddingLeft: gap,
           paddingRight: gap,
@@ -78,7 +80,7 @@ export function Wordmark({
       >
         {label}
       </span>
-      <Bracket corner="br" />
+      <Corner corner="br" />
     </span>
   );
 }
